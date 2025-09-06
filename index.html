@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tu Ventana Azul</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:'Georgia', serif;
+      background:linear-gradient(135deg,#0c1445,#1e3c72,#2a5298);
+      color:#fff;min-height:100vh;overflow-x:hidden;user-select:none
+    }
+    .container{max-width:1000px;margin:0 auto;padding:20px}
+    .header{text-align:center;margin-bottom:30px}
+    .title{font-size:3em;margin-bottom:15px;text-shadow:0 0 20px rgba(168,216,255,.5);
+      background:linear-gradient(45deg,#fff,#a8d8ff,#fff);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+      animation:titleGlow 3s ease-in-out infinite alternate}
+    .subtitle{font-size:1.3em;opacity:.9;font-style:italic;text-shadow:0 0 10px rgba(255,255,255,.3)}
+    .input-section{background:rgba(255,255,255,.05);border-radius:25px;padding:30px;margin-bottom:20px;
+      backdrop-filter:blur(15px);border:1px solid rgba(255,255,255,.1);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+    .emotion-input{width:100%;padding:18px;font-size:1.2em;border:none;border-radius:15px;background:rgba(255,255,255,.1);color:#fff;margin-bottom:20px;
+      font-family:'Georgia',serif;resize:vertical;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);transition:.3s}
+    .emotion-input::placeholder{color:rgba(255,255,255,.6)}
+    .emotion-input:focus{outline:none;box-shadow:0 0 25px rgba(168,216,255,.4);border-color:rgba(168,216,255,.5)}
+    .controls-grid{display:grid;grid-template-columns:1fr auto auto auto;gap:15px;align-items:center;margin-bottom:20px}
+    .generate-btn{padding:15px 25px;font-size:1.2em;background:linear-gradient(45deg,#ff6b6b,#ff8e8e,#ffa8a8);
+      color:#fff;border:none;border-radius:15px;cursor:pointer;font-family:'Georgia',serif;font-weight:bold;transition:.4s;
+      box-shadow:0 5px 20px rgba(255,107,107,.3);position:relative;overflow:hidden}
+    .generate-btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .5s}
+    .generate-btn:hover::before{left:100%}
+    .generate-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,107,107,.4)}
+    .control-btn{padding:12px 18px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+      border-radius:12px;color:#fff;cursor:pointer;font-size:1em;transition:.3s;backdrop-filter:blur(10px)}
+    .control-btn:hover{background:rgba(255,255,255,.2);transform:translateY(-1px)}
+    .intensity-control{display:flex;align-items:center;gap:10px;margin-top:15px}
+    .slider{width:200px;height:6px;border-radius:3px;background:rgba(255,255,255,.2);outline:none;-webkit-appearance:none}
+    .slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+      background:linear-gradient(45deg,#ff6b6b,#ff8e8e);cursor:pointer;box-shadow:0 2px 10px rgba(255,107,107,.4)}
+    .presets{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+    .preset-btn{padding:10px 20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);
+      border-radius:25px;color:#fff;cursor:pointer;font-size:.95em;transition:.3s;backdrop-filter:blur(10px)}
+    .preset-btn:hover{background:rgba(255,255,255,.15);transform:scale(1.05)}
+    .preset-btn.active{background:linear-gradient(45deg,#ff6b6b,#ff8e8e);box-shadow:0 4px 15px rgba(255,107,107,.3)}
+    .canvas-section{background:rgba(0,0,0,.4);border-radius:25px;padding:25px;margin-bottom:20px;backdrop-filter:blur(15px);
+      border:1px solid rgba(255,255,255,.1);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+    #artCanvas{width:100%;height:500px;border-radius:20px;background:radial-gradient(circle at center,#000428,#004e92);
+      display:block;cursor:crosshair;box-shadow:inset 0 0 50px rgba(0,0,0,.5)}
+    .result-section{background:rgba(255,255,255,.05);border-radius:25px;padding:25px;backdrop-filter:blur(15px);
+      border:1px solid rgba(255,255,255,.1);display:none}
+    .color-palette{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;justify-content:center}
+    .color-circle{width:50px;height:50px;border-radius:50%;border:3px solid rgba(255,255,255,.3);transition:.3s;
+      box-shadow:0 4px 15px rgba(0,0,0,.3)}
+    .color-circle:hover{transform:scale(1.15);box-shadow:0 6px 25px rgba(0,0,0,.5)}
+    .interpretation{font-style:italic;text-align:center;margin-top:20px;padding:20px;background:rgba(255,255,255,.05);
+      border-radius:15px;line-height:1.7;font-size:1.1em;text-shadow:0 1px 3px rgba(0,0,0,.3)}
+    .loading{text-align:center;padding:30px;font-style:italic}
+    .spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.1);border-radius:50%;border-top-color:#a8d8ff;animation:spin 1s linear infinite;margin:0 auto 15px}
+    .audio-visualizer{display:flex;gap:3px;justify-content:center;align-items:end;height:40px;margin:15px 0}
+    .visualizer-bar{width:4px;background:linear-gradient(to top,#ff6b6b,#ffa8a8);border-radius:2px;animation:visualize .5s ease-in-out infinite alternate}
+    @keyframes titleGlow{from{ text-shadow:0 0 20px rgba(168,216,255,.5)} to{ text-shadow:0 0 30px rgba(168,216,255,.8),0 0 40px rgba(168,216,255,.3)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes visualize{to{height:100%}}
+    @media (max-width:768px){
+      .container{padding:15px}
+      .title{font-size:2.2em}
+      .controls-grid{grid-template-columns:1fr;text-align:center}
+      .generate-btn{width:100%}
+      #artCanvas{height:350px}
+      .intensity-control{justify-content:center}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="title">Tu Ventana Azul</h1>
+      <p class="subtitle">Donde las emociones cobran vida en luz, forma y sonido</p>
+    </div>
+
+    <div class="input-section">
+      <div class="presets">
+        <button class="preset-btn" onclick="setPreset('nostalgia', this)">🌅 Nostalgia Dorada</button>
+        <button class="preset-btn" onclick="setPreset('alegria', this)">☀️ Euforia Solar</button>
+        <button class="preset-btn" onclick="setPreset('calma', this)">🌊 Serenidad Oceánica</button>
+        <button class="preset-btn" onclick="setPreset('tristeza', this)">🌧️ Melancolía Azul</button>
+        <button class="preset-btn" onclick="setPreset('pasion', this)">🔥 Pasión Carmesí</button>
+        <button class="preset-btn" onclick="setPreset('misterio', this)">🌙 Misterio Violeta</button>
+      </div>
+      
+      <textarea class="emotion-input" id="emotionText" rows="4"
+        placeholder="Describe tu emoción, recuerdo o sentimiento..."></textarea>
+      
+      <div class="controls-grid">
+        <button class="generate-btn" id="generateBtn" onclick="generateArt()">✨ Crear Sinfonía Emocional</button>
+        <button class="control-btn" id="soundBtn" onclick="toggleSound()">🎵 Audio</button>
+        <button class="control-btn" onclick="saveArt()">💾 Guardar</button>
+        <button class="control-btn" onclick="clearCanvas()">🗑️ Limpiar</button>
+      </div>
+      
+      <div class="intensity-control">
+        <span style="font-size:.9em;opacity:.8">Intensidad:</span>
+        <input type="range" class="slider" id="intensitySlider" min="0.3" max="2" step="0.1" value="1">
+        <span id="intensityValue" style="font-size:.9em;opacity:.8">100%</span>
+      </div>
+    </div>
+
+    <div class="canvas-section">
+      <canvas id="artCanvas"></canvas>
+    </div>
+
+    <div class="result-section" id="resultSection">
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p id="loadingText">Traduciendo el lenguaje de tu alma...</p>
+        <div class="audio-visualizer" id="audioViz" style="display:none">
+          <div class="visualizer-bar" style="animation-delay:0s;height:20%"></div>
+          <div class="visualizer-bar" style="animation-delay:.1s;height:40%"></div>
+          <div class="visualizer-bar" style="animation-delay:.2s;height:60%"></div>
+          <div class="visualizer-bar" style="animation-delay:.3s;height:30%"></div>
+          <div class="visualizer-bar" style="animation-delay:.4s;height:70%"></div>
+          <div class="visualizer-bar" style="animation-delay:.5s;height:50%"></div>
+          <div class="visualizer-bar" style="animation-delay:.6s;height:80%"></div>
+        </div>
+      </div>
+      <div id="results" style="display:none">
+        <h3 style="text-align:center;margin-bottom:15px">Tu Paleta Emocional</h3>
+        <div class="color-palette" id="colorPalette"></div>
+        <div class="interpretation" id="interpretation"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// -------- Utilidades --------
+class PerlinNoise{
+  constructor(){
+    this.permutation=[]; for(let i=0;i<256;i++) this.permutation[i]=i;
+    for(let i=0;i<256;i++){ const j=Math.floor(Math.random()*256); [this.permutation[i],this.permutation[j]]=[this.permutation[j],this.permutation[i]];}
+    this.permutation=[...this.permutation,...this.permutation];
+  }
+  fade(t){ return t*t*t*(t*(t*6-15)+10); }
+  lerp(a,b,t){ return a + t*(b-a); }
+  grad(hash,x,y){
+    const h=hash&15, u=h<8?x:y, v=h<4?y:(h===12||h===14)?x:0;
+    return ((h&1)===0?u:-u)+((h&2)===0?v:-v);
+  }
+  noise(x,y){
+    const X=Math.floor(x)&255, Y=Math.floor(y)&255;
+    x-=Math.floor(x); y-=Math.floor(y);
+    const u=this.fade(x), v=this.fade(y);
+    const a=this.permutation[X]+Y, aa=this.permutation[a], ab=this.permutation[a+1];
+    const b=this.permutation[X+1]+Y, ba=this.permutation[b], bb=this.permutation[b+1];
+    return this.lerp(
+      this.lerp(this.grad(this.permutation[aa],x,y), this.grad(this.permutation[ba],x-1,y), u),
+      this.lerp(this.grad(this.permutation[ab],x,y-1), this.grad(this.permutation[bb],x-1,y-1), u),
+    v);
+  }
+}
+
+// -------- Estado --------
+let canvas, ctx, DPR=1;
+let particles=[]; let isAnimating=false; let time=0;
+let audioContext, oscillators=[], gainNodes=[];
+let soundEnabled=true; let currentEmotion='calma'; let intensity=1;
+const noise = new PerlinNoise();
+
+const emotionConfig={
+  nostalgia:{ colors:['#D4A574','#8B4B8C','#F2E7B3','#A67C52','#E6C79C'], frequencies:[220,330,440], particles:30, speed:.8, pattern:'organic', conn:140 },
+  alegria:  { colors:['#FFD700','#FF8C42','#FF6B9D','#FFA500','#FFE135'], frequencies:[440,660,880], particles:45, speed:1.8, pattern:'energetic', conn:120 },
+  calma:    { colors:['#81C784','#A8E6CF','#C8E6C9','#4FC3F7','#B3E5FC'], frequencies:[174,261,349], particles:25, speed:.6, pattern:'flowing', conn:160 },
+  tristeza: { colors:['#2C5F8A','#4A90A4','#6BB6C7','#7986CB','#9FA8DA'], frequencies:[194,244,291], particles:20, speed:.4, pattern:'gentle', conn:150 },
+  pasion:   { colors:['#E74C3C','#C0392B','#FF5722','#F44336','#D32F2F'], frequencies:[293,440,587], particles:40, speed:2.2, pattern:'intense', conn:110 },
+  misterio: { colors:['#6A1B9A','#8E24AA','#AB47BC','#CE93D8','#E1BEE7'], frequencies:[138,207,276], particles:35, speed:1.0, pattern:'mysterious', conn:130 },
+};
+
+// -------- Init --------
+window.addEventListener('load',()=>{
+  canvas=document.getElementById('artCanvas');
+  ctx=canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  document.getElementById('intensitySlider').addEventListener('input', e=>{
+    intensity=parseFloat(e.target.value);
+    document.getElementById('intensityValue').textContent=Math.round(intensity*100)+'%';
+  });
+
+  // Atajos (ignorar si estás escribiendo en el textarea)
+  document.addEventListener('keydown', e=>{
+    const ae=document.activeElement;
+    if(ae&& (ae.tagName==='TEXTAREA' || ae.isContentEditable)) return;
+    if(e.code==='Space'){ e.preventDefault(); isAnimating?stopAnimation():generateArt(); }
+    else if(e.code==='KeyS'){ e.preventDefault(); toggleSound(); }
+    else if(e.code==='KeyC'){ e.preventDefault(); clearCanvas(); }
+    else if(e.code==='KeyE'){ e.preventDefault(); saveArt(); }
+  });
+
+  initBackgroundEffect();
+});
+
+function resizeCanvas(){
+  const rect=canvas.getBoundingClientRect();
+  DPR=Math.min(2, window.devicePixelRatio||1);
+  canvas.width = Math.max(1, Math.floor(rect.width * DPR));
+  canvas.height= Math.max(1, Math.floor(rect.height* DPR));
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+
+// Fondo suave cuando no hay animación
+function initBackgroundEffect(){
+  const bgParticles=[];
+  for(let i=0;i<15;i++){
+    bgParticles.push({ x:Math.random()* (canvas.width/DPR), y:Math.random()* (canvas.height/DPR),
+      size:Math.random()*2+1, alpha:Math.random()*0.1+0.05, speed:Math.random()*0.2+0.1 });
+  }
+  function tick(){
+    if(isAnimating) return;
+    ctx.clearRect(0,0, canvas.width/DPR, canvas.height/DPR);
+    bgParticles.forEach(p=>{
+      p.y -= p.speed; if(p.y<0) p.y = canvas.height/DPR;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fillStyle='rgba(168,216,255,'+p.alpha+')'; ctx.fill();
+    });
+    if(!isAnimating) requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+// -------- UI --------
+function setPreset(emotion, el){
+  const presetTexts={
+    nostalgia:'Las tardes doradas de mi infancia, cuando el tiempo se detenía entre risas y secretos',
+    alegria:'La explosión de luz que siento cuando todo encaja, cuando la vida sonríe y el mundo baila',
+    calma:'El susurro del agua sobre las piedras, donde mi alma encuentra su centro y respira profundo',
+    tristeza:'La lluvia silenciosa en mi ventana, llevándose pedazos de lo que fue y ya no volverá',
+    pasion:'El fuego que arde dentro, consumiendo dudas, transformando todo en pura energía vital',
+    misterio:'Los secretos que la noche guarda, las verdades que solo se revelan en la penumbra'
+  };
+  document.getElementById('emotionText').value=presetTexts[emotion]||'';
+  currentEmotion=emotion;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+}
+
+// Normaliza tildes/ñ para análisis
+const strip = s => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+function analyzeEmotion(text){
+  const words = strip(text.toLowerCase());
+  const keys={
+    nostalgia:['nostalgia','recuerdo','pasado','infancia','tiempo','antes','dorado','melancolia'],
+    alegria:['alegr','feliz','risa','sol','luz','baila','sonr','euforia','celebr'],
+    calma:['calm','paz','tranquil','silencio','agua','respir','centro','sereno'],
+    tristeza:['trist','llorar','dolor','lluvia','solo','perdida','vacio','melancol'],
+    pasion:['pasion','fuego','ard','intenso','energia','vital','fuerza','poder'],
+    misterio:['misterio','secreto','noche','oculto','sombra','enigma','penumbra'],
+  };
+  let best='calma', scoreBest=0;
+  Object.keys(keys).forEach(k=>{
+    let sc=0; keys[k].forEach(kw=>{ if(words.includes(kw)) sc++; });
+    if(sc>scoreBest){ scoreBest=sc; best=k; }
+  });
+  return best;
+}
+
+function generateArt(){
+  const text = document.getElementById('emotionText').value.trim();
+  if(!text){ alert('Por favor, escribe una emoción o sentimiento para crear tu ventana azul'); return; }
+  currentEmotion = analyzeEmotion(text);
+  const config = emotionConfig[currentEmotion];
+
+  document.getElementById('resultSection').style.display='block';
+  document.getElementById('loading').style.display='block';
+  document.getElementById('results').style.display='none';
+  document.getElementById('generateBtn').disabled=true;
+  if(soundEnabled) document.getElementById('audioViz').style.display='flex';
+
+  const tips=[
+    'Traduciendo el lenguaje de tu alma...',
+    'Despertando los colores dormidos en tus palabras...',
+    'Tejiendo hilos de luz con tus emociones...',
+    'Dando forma a lo invisible que habita en ti...',
+    'Convirtiendo susurros en sinfonía visual...'
+  ];
+  document.getElementById('loadingText').textContent = tips[Math.floor(Math.random()*tips.length)];
+
+  setTimeout(()=>{
+    initializeAdvancedParticles(config);
+    startAdvancedAnimation();
+    playEmotionalSoundscape(config);
+    showAdvancedResults(config, text);
+    document.getElementById('generateBtn').disabled=false;
+  }, 800);
+}
+
+function initializeAdvancedParticles(config){
+  particles=[];
+  const N = Math.floor(config.particles * intensity);
+  for(let i=0;i<N;i++){
+    particles.push({
+      x: Math.random()*(canvas.width/DPR),
+      y: Math.random()*(canvas.height/DPR),
+      vx:(Math.random()-.5)*config.speed*intensity,
+      vy:(Math.random()-.5)*config.speed*intensity,
+      size: Math.random()*15+5,
+      color: config.colors[Math.floor(Math.random()*config.colors.length)],
+      alpha: Math.random()*0.8+0.2,
+      life:1, maxLife: Math.random()*300+200, age:0,
+      noiseOffsetX: Math.random()*1000, noiseOffsetY: Math.random()*1000,
+      pattern: config.pattern, conn: config.conn
+    });
+  }
+}
+
+// Animación con FPS adaptativo
+let lastFrameTime=0; const targetFPS = window.innerWidth<=768?30:60; const frameInterval = 1000/targetFPS;
+function optimizedAnimate(ts){
+  if(!isAnimating) return;
+  if(ts - lastFrameTime >= frameInterval){ animateAdvanced(); lastFrameTime=ts; }
+  requestAnimationFrame(optimizedAnimate);
+}
+function startAdvancedAnimation(){
+  if(isAnimating) return;
+  isAnimating=true; time=0; lastFrameTime=0; requestAnimationFrame(optimizedAnimate);
+}
+function stopAnimation(){
+  isAnimating=false;
+  if(audioContext){
+    oscillators.forEach(osc=>{ try{ osc.stop(); }catch(e){} });
+    oscillators=[]; gainNodes=[];
+  }
+}
+
+function animateAdvanced(){
+  time += 0.01;
+  const W=canvas.width/DPR, H=canvas.height/DPR;
+
+  ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='rgba(0,0,0,.03)';
+  ctx.fillRect(0,0,W,H);
+
+  ctx.globalCompositeOperation='lighter';
+
+  particles.forEach((p,i)=>{
+    p.age++;
+    const nx = noise.noise((p.x+p.noiseOffsetX)*0.005, time*0.5)*2;
+    const ny = noise.noise((p.y+p.noiseOffsetY)*0.005, time*0.5)*2;
+
+    switch(p.pattern){
+      case 'organic':   p.vx += nx*0.1;                     p.vy += ny*0.1; break;
+      case 'energetic': p.vx += nx*0.3 + Math.sin(time*2+i)*0.2; p.vy += ny*0.3 + Math.cos(time*2+i)*0.2; break;
+      case 'flowing':   p.vx += Math.sin(time+p.noiseOffsetX)*0.1; p.vy += ny*0.08; break;
+      case 'gentle':    p.vx += nx*0.05;                    p.vy += ny*0.05 + Math.sin(time*.5+i)*0.1; break;
+      case 'intense':   p.vx += nx*0.4 + Math.sin(time*3+i)*0.5; p.vy += ny*0.4 + Math.cos(time*3+i)*0.5; break;
+      case 'mysterious':p.vx += nx*0.15 + Math.sin(time*.8+i*.1)*0.2; p.vy += ny*0.15 + Math.cos(time*.8+i*.1)*0.2; break;
+    }
+
+    p.x += p.vx; p.y += p.vy;
+
+    const m=50;
+    if(p.x<=m || p.x>=W-m){ p.vx*=-0.8; p.x=Math.max(m, Math.min(W-m, p.x)); }
+    if(p.y<=m || p.y>=H-m){ p.vy*=-0.8; p.y=Math.max(m, Math.min(H-m, p.y)); }
+
+    p.vx *= 0.995; p.vy*=0.995;
+
+    if(p.age>p.maxLife){ p.age=0; p.x=Math.random()*W; p.y=Math.random()*H; }
+
+    const s = p.size*(1+Math.sin(time*2+i)*0.2);
+    const a = p.alpha*(0.7+Math.sin(time+i)*0.3);
+
+    // Halo exterior
+    ctx.beginPath(); ctx.arc(p.x,p.y,s*2.5,0,Math.PI*2);
+    let g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,s*2.5);
+    g.addColorStop(0, p.color+'00'); g.addColorStop(0.4, p.color+'32'); g.addColorStop(1, p.color+'00');
+    ctx.fillStyle=g; ctx.fill();
+
+    // Halo medio
+    ctx.beginPath(); ctx.arc(p.x,p.y,s*1.5,0,Math.PI*2);
+    g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,s*1.5);
+    g.addColorStop(0, p.color+'64'); g.addColorStop(0.6, p.color+'3C'); g.addColorStop(1, p.color+'00');
+    ctx.fillStyle=g; ctx.fill();
+
+    // Núcleo
+    ctx.beginPath(); ctx.arc(p.x,p.y,s*0.4,0,Math.PI*2);
+    ctx.fillStyle = p.color + Math.floor(a*255).toString(16).padStart(2,'0'); ctx.fill();
+  });
+
+  // Conexiones
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+      const d=Math.hypot(dx,dy), C = Math.max(80, (particles[i].conn+particles[j].conn)/2) * intensity;
+      if(d<C){
+        const op=(C-d)/C*0.08; ctx.beginPath();
+        ctx.moveTo(particles[i].x,particles[i].y);
+        ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.strokeStyle='rgba(168,216,255,'+op+')'; ctx.lineWidth=.5; ctx.stroke();
+      }
+    }
+  }
+
+  ctx.globalCompositeOperation='source-over';
+}
+
+function playEmotionalSoundscape(config){
+  if(!soundEnabled) return;
+  try{
+    if(audioContext){ try{ audioContext.close(); }catch(_){ } }
+    audioContext = new (window.AudioContext||window.webkitAudioContext)();
+    oscillators=[]; gainNodes=[];
+
+    // Convolver simple
+    const convolver = audioContext.createConvolver();
+    const L = audioContext.sampleRate*2;
+    const imp = audioContext.createBuffer(2, L, audioContext.sampleRate);
+    for(let ch=0; ch<2; ch++){
+      const data = imp.getChannelData(ch);
+      for(let i=0;i<L;i++){ data[i] = (Math.random()*2-1)*Math.pow(1 - i/L, 2); }
+    }
+    convolver.buffer = imp;
+
+    config.frequencies.forEach((freq, idx)=>{
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      const filter = audioContext.createBiquadFilter(); filter.type='lowpass';
+      filter.frequency.setValueAtTime(800+idx*200, audioContext.currentTime);
+
+      osc.connect(filter); filter.connect(gain);
+      gain.connect(convolver); convolver.connect(audioContext.destination);
+      gain.connect(audioContext.destination);
+
+      osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+      osc.type = idx===0?'sine':(idx===1?'triangle':'sawtooth');
+
+      gain.gain.setValueAtTime(0, audioContext.currentTime);
+      gain.gain.linearRampToValueAtTime(0.03+idx*0.01, audioContext.currentTime+1);
+
+      const lfo=audioContext.createOscillator(), lfoGain=audioContext.createGain();
+      lfo.frequency.setValueAtTime(0.1+idx*0.05, audioContext.currentTime);
+      lfoGain.gain.setValueAtTime(freq*0.01, audioContext.currentTime);
+      lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
+
+      osc.start(); lfo.start();
+      gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime+12);
+      osc.stop(audioContext.currentTime+12); lfo.stop(audioContext.currentTime+12);
+
+      oscillators.push(osc); gainNodes.push(gain);
+    });
+
+    // Desbloqueo móvil
+    window.addEventListener('pointerdown',()=>{
+      if(audioContext && audioContext.state==='suspended') audioContext.resume();
+    }, {once:true});
+
+  }catch(e){ console.log('Audio no disponible:', e); }
+}
+
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  document.getElementById('soundBtn').textContent = soundEnabled ? '🎵 Audio' : '🔇 Silencio';
+  if(!soundEnabled && audioContext){
+    try{ audioContext.close(); }catch(_){}
+    document.getElementById('audioViz').style.display='none';
+  }
+}
+
+function saveArt(){
+  const out = canvas.toDataURL('image/png', 1.0);
+  const a = document.createElement('a');
+  a.download = `mi-ventana-azul-${currentEmotion}-${Date.now()}.png`;
+  a.href = out; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function clearCanvas(){
+  stopAnimation(); particles=[];
+  ctx.clearRect(0,0, canvas.width/DPR, canvas.height/DPR);
+  document.getElementById('resultSection').style.display='none';
+  canvas.style.background='radial-gradient(circle at center,#000428,#004e92)';
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  initBackgroundEffect();
+}
+
+function showAdvancedResults(config, text){
+  const palette=document.getElementById('colorPalette'); palette.innerHTML='';
+  config.colors.forEach((c,i)=>{
+    const d=document.createElement('div'); d.className='color-circle'; d.style.backgroundColor=c; d.style.animationDelay=`${i*.1}s`;
+    palette.appendChild(d);
+  });
+  const interpretations={
+    nostalgia:'Tus recuerdos danzan en tonos dorados y violetas suaves, como hojas de otoño que caen lentamente al compás de la memoria, creando un mosaico de momentos que el tiempo convirtió en tesoros.',
+    alegria:'Explosiones de amarillo y naranja vibran con energía desbordante, cada partícula es una carcajada que rebota en el aire, pintando el cielo de tu alma con los colores de la felicidad pura.',
+    calma:'Verdes y azules serenos fluyen como agua de montaña, creando un santuario de paz donde tu espíritu encuentra su centro y respira en perfecta armonía con el universo.',
+    tristeza:'Azules profundos y grises plateados se mecen como olas melancólicas, transformando el dolor en una belleza contemplativa que honra lo que fue y abraza lo que vendrá.',
+    pasion:'Rojos intensos y naranjas ardientes danzan con una energía desbordante, cada movimiento es fuego puro que consume las dudas y transforma todo en pura fuerza vital.',
+    misterio:'Violetas profundos y púrpuras enigmáticos se entrelazan como secretos susurrados en la penumbra, revelando verdades ocultas que solo tu alma conoce.'
+  };
+  document.getElementById('interpretation').textContent = interpretations[currentEmotion] || interpretations.calma;
+
+  setTimeout(()=>{
+    document.getElementById('loading').style.display='none';
+    document.getElementById('results').style.display='block';
+    document.getElementById('audioViz').style.display='none';
+  }, 500);
+}
+
+// Ajuste orientación
+window.addEventListener('orientationchange', ()=>{ setTimeout(()=>{
+  resizeCanvas(); if(isAnimating && particles.length){ initializeAdvancedParticles(emotionConfig[currentEmotion]); }
+}, 100); });
+</script>
+</body>
+</html>
